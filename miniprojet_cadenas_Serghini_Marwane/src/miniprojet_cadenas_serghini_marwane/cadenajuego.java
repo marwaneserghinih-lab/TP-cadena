@@ -22,6 +22,7 @@ public class cadenajuego {
     private int[] saisieJoueur;          // Remplaçant de codeActuel
     private int essaisRestants;
     private int compteurTours;
+    public ResultatAnalyse tester;
 
     // ================== Constructeur ==================
 
@@ -126,15 +127,21 @@ public class cadenajuego {
     /**
      * Remet le jeu à zéro avec une nouvelle combinaison.
      */
-    public void resetPartie() {
+   public void resetPartie() {
         this.saisieJoueur = new int[TAILLE_COMBINAISON];
         this.essaisRestants = MAX_ESSAIS;
         this.compteurTours = 0;
         this.combinaisonSecrete = initialiserCombinaison();
     }
-}
-
 // ================== Classe utilitaire (Remplace Propositions) ==================
+
+    public boolean estPartieTerminee() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    public void changerChiffre(int position, boolean monter) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 
 /**
  * Cette classe sert à transporter le résultat d'une tentative.
@@ -154,4 +161,5 @@ class ResultatAnalyse {
     public int getExacts() { return exacts; }
     public int getSuperieurs() { return superieurs; }
     public int getInferieurs() { return inferieurs; }
+}
 }
