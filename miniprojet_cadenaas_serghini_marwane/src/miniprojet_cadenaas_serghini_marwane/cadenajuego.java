@@ -5,8 +5,10 @@
 package miniprojet_cadenaas_serghini_marwane;
 
 
+
 public class cadenajuego extends javax.swing.JFrame {
     public int[] nombres;
+    public int[] objectif;
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(cadenajuego.class.getName());
 
@@ -21,6 +23,10 @@ public class cadenajuego extends javax.swing.JFrame {
     
     private void initJeu() {
         nombres = new int[]{1, 2, 3, 4};
+        objectif = new int[]{0, 0, 0, 0};
+        for (int i = 0; i < 4; i++) {
+            objectif[i] = (int)(Math.random() * 10); 
+        }
     }
     
     private void actualiserLabels() {
@@ -109,6 +115,7 @@ public class cadenajuego extends javax.swing.JFrame {
         down3.addActionListener(this::down3ActionPerformed);
 
         tester.setText("Tester");
+        tester.addActionListener(this::testerActionPerformed);
 
         jLabel5.setText("Nombre de chiffres exacts :");
 
@@ -288,6 +295,25 @@ public class cadenajuego extends javax.swing.JFrame {
         actualiserLabels();
     }                                     
 
+    private void testerActionPerformed(java.awt.event.ActionEvent evt) {                                       
+        int exact_nb = 0;
+        int hauts_nb = 0;
+        int bas_nb = 0;
+        for (int i = 0; i < 4; i++) {
+            if (nombres[i] == objectif[i]) {
+                exact_nb++;
+            } else if (nombres[i] > objectif[i]) {
+                hauts_nb++;
+            } else {
+                bas_nb++;
+            }
+        }
+        exact.setText(String.valueOf(exact_nb));
+        bas.setText(String.valueOf(bas_nb));
+        hauts.setText(String.valueOf(hauts_nb));
+
+    }                                      
+
     /**
      * @param args the command line arguments
      */
@@ -338,4 +364,3 @@ public class cadenajuego extends javax.swing.JFrame {
     private javax.swing.JButton up3;
     // End of variables declaration                   
 }
-
