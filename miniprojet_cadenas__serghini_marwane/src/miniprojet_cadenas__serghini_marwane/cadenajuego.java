@@ -4,13 +4,6 @@
  */
 package miniprojet_cadenas__serghini_marwane;
 
-public class Miniprojet_cadenas__serghini_marwane {
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        // TODO code application logic here
-    }
-    
+public class cadenajuego {
 }
+   
