@@ -1,7 +1,7 @@
 package demineur.engine;
 
 public abstract class Scene {
-    java.util.ArrayList<GameObject> objects;
+    public java.util.ArrayList<GameObject> objects;
     public Context context;
     
     public Scene(Context context_) {
@@ -13,12 +13,13 @@ public abstract class Scene {
         objects.add(object); 
     }
     
-    public void update(float dt) {
+    public void updateObjects(float dt) {
         for (GameObject o : objects) {
             o.update(dt); 
         }
     }
     
+    public abstract void update(float dt);
     public abstract void load();
     public abstract void exit(); 
 }
