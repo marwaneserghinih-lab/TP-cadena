@@ -31,5 +31,6 @@ public abstract class GameObject {
     public void load() {}; 
     public void exit() {}; 
     
+    // Hook d'actualisation.
     public abstract void update(float dt); 
 };

@@ -46,7 +46,6 @@ public class Runtime extends JPanel implements Runnable {
     // ratio de pixelisation de l'ecran
     private float pixelateRatio = 0.0f;
     
-    
     public Runtime(Context context_) {
         context = context_;
         // fond noir par défaut.
@@ -55,12 +54,16 @@ public class Runtime extends JPanel implements Runnable {
         running = false;
         setDoubleBuffered(true);
         setIgnoreRepaint(true); 
-    }
-    
+    };
 
     public void setPixelateRatio(float ratio) {
+        /*
+        Définit le ratio de pixelisation de l'ecran 
+        ratio (float):
+            le ratio de pixelisation. 
+        */
         this.pixelateRatio = ratio;
-    }
+    };
     
     /*
     Abstractions appelées depuis Context pour emmettre des instructions de dessin.
@@ -71,45 +74,47 @@ public class Runtime extends JPanel implements Runnable {
     public void addInstruction(int x, int y, String type, Color color, int[] complementary) {
         synchronized (instructions) {
             instructions.add(new DrawInstruction(x, y, type, color, complementary));
-        }
-    }
+        };
+    };
     
     public void addInstruction(int x, int y, BufferedImage img) {
         synchronized (instructions) {
             instructions.add(new DrawInstruction(x, y, img));
-        }
-    }
+        };
+    };
     
     @Override
     protected void paintComponent(Graphics g) {
-    /*
-    Hook de JPanel appelé a chaque repain();
-    gère le rendu.
-    */
-    
-    super.paintComponent(g);
-    // interface de rendu.
-    Graphics2D g2d = (Graphics2D) g;
-    
-    if (pixelateRatio > 0.0f) {
-        // mode pixélisé
-        renderPixelated(g2d);
-    } else {
-        // Mode normal
-        g2d.scale(context.DISPLAY_SCALE, context.DISPLAY_SCALE);
-        optimizeRendering(g2d);
-        handleRenderingInstructions(g2d);
-    }
-    
-    Toolkit.getDefaultToolkit().sync();
-}
+        /*
+        Hook de JPanel appelé a chaque repain();
+        gère le rendu.
+        */
+
+        super.paintComponent(g);
+        // interface de rendu.
+        Graphics2D g2d = (Graphics2D) g;
+
+        if (pixelateRatio > 0.0f) {
+            // mode pixélisé
+            renderPixelated(g2d);
+        } else {
+            // Mode normal
+            g2d.scale(context.DISPLAY_SCALE, context.DISPLAY_SCALE);
+            optimizeRendering(g2d);
+            handleRenderingInstructions(g2d);
+        };
+
+        Toolkit.getDefaultToolkit().sync();
+    };
 
     private void renderPixelated(Graphics2D g2d) {
+        /*
+        Methode de rendu de l'ecran, elle gère le scale, 
+        la pixelisation, l'optimisation de rendu, ... 
+        */
         int width = context.DISPLAY_WIDTH;
-        int height = context.DISPLAY_WIDTH;
-
+        int height = context.DISLAY_HEIGHT;
         int pixelSize = 1 + (int)(pixelateRatio * 63);
-
         int smallWidth = Math.max(1, width / pixelSize);
         int smallHeight = Math.max(1, height / pixelSize);
 
@@ -122,10 +127,8 @@ public class Runtime extends JPanel implements Runnable {
         Graphics2D g2dSmall = small.createGraphics();
         g2dSmall.setColor(Color.BLACK);
         g2dSmall.fillRect(0, 0, smallWidth, smallHeight);
-
         float scale = 1.0f / pixelSize;
         g2dSmall.scale(scale, scale);
-
         optimizeRendering(g2dSmall);
         handleRenderingInstructions(g2dSmall);
         g2dSmall.dispose();
@@ -134,80 +137,10 @@ public class Runtime extends JPanel implements Runnable {
             RenderingHints.KEY_INTERPOLATION,
             RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR
         );
-
+        
         g2d.scale(context.DISPLAY_SCALE, context.DISPLAY_SCALE);
         g2d.drawImage(small, 0, 0, width, height, null);
-    }
-
-    public void start() {
-        /*
-        Methode d'initialisation.
-        */
-        if (!running) {
-            running = true;
-            lastTime = System.nanoTime();
-            fpsTimer = System.currentTimeMillis();
-            gameThread = new Thread(this, "GameLoop");
-            gameThread.setPriority(Thread.MAX_PRIORITY);
-            gameThread.start();
-        }
-    }
-
-    @Override
-    public void run() {
-        /*
-        Methode de demarrage du jeu.
-        */
-        while (running) {    
-            // BOUCLE DU JEU 
-            
-            currentTime = System.nanoTime();
-            handleDt();
-            context.mouseClicked = false;
-            context.mouseRightClicked = false;
-            context.events.clear();
-            repaint();
-            fpsCalculation(); 
-            fpsWait();
-            if (context.hovered) {
-                setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            } else {
-                setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-            }
-            context.hovered = false;
-            Thread.yield();
-           
-        }
-    }
-
-    private void update(float dt) {
-        /*
-        Hook de JPannel apelé chaque frame.
-        */
-        synchronized (instructions) {
-            instructions.clear();
-        }
-        // Actualisation des objets du jeu.
-        ArrayList<GameObject> objects = context.objects;
-
-        for (int i = 0; i < objects.size(); i++) {
-            GameObject obj = objects.get(i);
-            if (obj.update_flag) {
-                obj.update(dt);
-            }
-        }
-    }
-    
-    private void optimizeRendering(Graphics2D g2d) {
-        /*
-        Optimisations diverses
-        */
-        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
-        g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_SPEED);
-        g2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
-    }
+    };
     
     private void handleRenderingInstructions(Graphics2D g2d) {
         /*
@@ -215,6 +148,8 @@ public class Runtime extends JPanel implements Runnable {
         */
         synchronized (instructions) {
             g2d.drawImage(context.bg, 0, 0, null);
+            g2d.translate(context.displayOffsetX, context.displayOffsetY);
+            
             for (int i = 0; i < instructions.size(); i++) {
                 DrawInstruction inst = instructions.get(i);
                 // Dessin d'un rectangle
@@ -226,17 +161,89 @@ public class Runtime extends JPanel implements Runnable {
                 if (inst.type.equals("image")) {
                     g2d.drawImage(inst.image, inst.x, inst.y, null); 
                 }
-                
+                // Dessin d'un cercle
                 if (inst.type.equals("circle")) {
                     int d = inst.complementary[0];
                     int r = d / 2;
 
                     g2d.setColor(inst.color);
                     g2d.fillOval(inst.x - r, inst.y - r, d, d);
-                }
-            }
-        }
-    }
+                };
+            };
+        };
+    };
+    
+    private void optimizeRendering(Graphics2D g2d) {
+        /*
+        Optimisations de rendu diverses
+        */
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
+        g2d.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_SPEED);
+        g2d.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_SPEED);
+    };
+    public void start() {
+        /*
+        Methode d'initialisation.
+        */
+        if (!running) {
+            running = true;
+            lastTime = System.nanoTime();
+            fpsTimer = System.currentTimeMillis();
+            gameThread = new Thread(this, "GameLoop");
+            gameThread.setPriority(Thread.MAX_PRIORITY);
+            gameThread.start();
+        };
+    };
+
+    @Override
+    public void run() {
+        /*
+        Methode de demarrage du jeu.
+        */
+        while (running) {    
+            // BOUCLE DU JEU 
+            currentTime = System.nanoTime();
+            handleDt();
+            context.mouseClicked = false;
+            context.mouseRightClicked = false;
+            context.events.clear();
+            repaint();
+            fpsCalculation(); 
+            fpsWait();
+            handleCursor();
+            Thread.yield(); 
+        };
+    };
+    
+    private void handleDt() {
+        /*
+        Gestion du delta-time.
+        */
+        long elapsed = currentTime - lastTime;
+        float dt = elapsed / 1_000_000f;
+        lastTime = currentTime;
+        update(dt);
+    };
+    
+    private void update(float dt) {
+        /*
+        Hook de JPannel apelé chaque frame.
+        */
+        synchronized (instructions) {
+            instructions.clear();
+        };
+        // Actualisation des objets du jeu.
+        ArrayList<GameObject> objects = context.objects;
+
+        for (int i = 0; i < objects.size(); i++) {
+            GameObject obj = objects.get(i);
+            if (obj.update_flag) {
+                obj.update(dt);
+            };
+        };
+    };
     
     private void fpsCalculation() {
         /*
@@ -248,18 +255,8 @@ public class Runtime extends JPanel implements Runnable {
             currentFPS = frameCount;
             frameCount = 0;
             fpsTimer = currentMillis;
-        }
-    }
-    
-    private void handleDt() {
-        /*
-        Gestion du delta-time.
-        */
-        long elapsed = currentTime - lastTime;
-        float dt = elapsed / 1_000_000f;
-        lastTime = currentTime;
-        update(dt);
-    }
+        };
+    };
     
     private void fpsWait() {
         /*
@@ -274,9 +271,22 @@ public class Runtime extends JPanel implements Runnable {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 running = false;
-            }
-        }
-    }
+            };
+        };
+    };
+   
+    
+    private void handleCursor() {
+        /*
+        Gère l'état du curseur de la souris.
+        */
+        if (context.hovered) {
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        } else {
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        };
+        context.hovered = false;
+    };
     
     public void stop() {
         /*
@@ -288,14 +298,17 @@ public class Runtime extends JPanel implements Runnable {
                 gameThread.join(2000);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-            }
-        }
-    }
+            };
+        };
+    };
     
     public void closeWindow() {
+        /*
+        Fermeture de la fenêtre.
+        */
         Window window = SwingUtilities.getWindowAncestor(this);
         if (window != null) {
             window.dispose(); 
-        }
-    }
-}
+        };
+    };
+};

@@ -19,7 +19,8 @@ public class Context extends javax.swing.JFrame {
     */
     
     // liste d'objets du jeu
-    public java.util.ArrayList<GameObject> objects = new java.util.ArrayList<>(); 
+    public java.util.ArrayList<GameObject> objects = new java.util.ArrayList<>();
+    
     
     // HashMap d'état du clavier (touche : état)
     public java.util.HashMap<Integer, Boolean> keys = new java.util.HashMap<>(); 
@@ -34,6 +35,15 @@ public class Context extends javax.swing.JFrame {
     // Position de la souris 
     public int mouseX = 0;
     public int mouseY = 0;
+    
+    public String currentMode = "classique";
+    
+    public int arcadeScore = 0;
+    public float arcadeTime = 15;
+    
+    public int displayOffsetX = 0;
+    public int displayOffsetY = 0;
+    
     public boolean mousePressed = false;
     public volatile boolean mouseClicked = false;
     public boolean mouseRightPressed = false;
@@ -54,6 +64,8 @@ public class Context extends javax.swing.JFrame {
     Image bg = Toolkit.getDefaultToolkit().getImage("src/assets/bg.gif");
     
     private Dimension windowedSize;
+    
+    public int nbBombs = 0;
    
     
     public Context(String title) {
@@ -72,6 +84,10 @@ public class Context extends javax.swing.JFrame {
         setupRuntime();
         
         objects = new java.util.ArrayList<GameObject>();
+    };
+    
+    public void slide(int slideValue_) {
+        displayOffsetX = slideValue_;
     }
     
     /* 
@@ -87,7 +103,7 @@ public class Context extends javax.swing.JFrame {
             -> 1 : très pixélisé.   
         */
         runtime.setPixelateRatio(ratio);
-    }
+    };
     
     public void drawRect(Rect rect, Color color) {
         /*
@@ -98,11 +114,11 @@ public class Context extends javax.swing.JFrame {
             sa couleur.
         */
         runtime.addInstruction(rect.x, rect.y, "rect", color, new int[]{rect.w, rect.h});
-    }
+    };
     
     public void drawCircle(int x, int y, int radius, Color color) {
         runtime.addInstruction(x, y, "circle", color, new int[]{radius});
-    }
+    };
     
     public void drawLine(int x1, int y1, int x2, int y2, Color color, int width) {
         /*
@@ -117,7 +133,7 @@ public class Context extends javax.swing.JFrame {
             epaisseur de la ligne.
         */
         runtime.addInstruction(x1, y1, "line", color, new int[]{x2, y2});
-    }
+    };
     
     public void addObject(GameObject object) {
         /*
@@ -126,7 +142,7 @@ public class Context extends javax.swing.JFrame {
             objet a ajouter.
         */
         objects.add(object);
-    }
+    };
     
     public void loadImage(String name, String path) {
         /*
@@ -142,10 +158,45 @@ public class Context extends javax.swing.JFrame {
         } catch (IOException e) {
             System.err.println("Image Loading Error");
             e.printStackTrace();
-        }
-    }
+        };
+    };;
+    
+    public void drawNumber(int number, int x, int y) {
+        /*
+        Dessine un nombre.
+        number (int):
+            le nombre a dessiner.
+        (x, y):
+            la position où le dessiner.
+        */
+        String scoreStr = Integer.toString(number);
+        for (int i = 0; i < scoreStr.length() ; i++) {
+            char digit = scoreStr.charAt(i); 
+            drawImage("nombres" + digit + ".0", x + i * 16, y);
+        };
+    };
+    
+    public void screenShake(int power) {
+        /*
+        Fait vibrer l'ecran (utilisé lors des explosions de bombes).
+        */
+        displayOffsetX = (int)(Math.random() * power); 
+        displayOffsetY = (int)(Math.random() * power); 
+    };
     
     public void loadImages(String name, String path, int sliceX, int sliceY) {
+        /*
+        Charge un SpriteSheet en le découpant puis en stockant les différentes
+        parts individuellement.
+        name (String):
+            nom du SpriteSheet.
+        path (String):  
+            chemin du SpriteSheet.
+        (sliceX, sliceY):
+            découpage du SpriteSheet.
+        chaque image sera stochée dans la forme :
+        <nom du SpriteSheet><positionX>.<positionY> s
+        */
         try {
             BufferedImage img = ImageIO.read(new File(path));
             for (int i = 0; i < (int)(img.getWidth() / sliceX); i++) {
@@ -154,14 +205,14 @@ public class Context extends javax.swing.JFrame {
                         name + Integer.toString(i) + "." + Integer.toString(j), 
                         img.getSubimage(i * sliceX, j * sliceY, sliceX, sliceY)
                     );
-                }
-            }
+                };
+            };
             images.put(name, img);
         } catch (IOException e) {
             System.err.println("Image Loading Error");
             e.printStackTrace();
-        }
-    }
+        };
+    };
     
     public void drawImage(String name, int x, int y) {
         /*
@@ -173,9 +224,6 @@ public class Context extends javax.swing.JFrame {
         */
         runtime.addInstruction(x, y, images.get(name));
     };
-    
-    
-  
     
     /*
     METHODES INTERNES
@@ -196,7 +244,7 @@ public class Context extends javax.swing.JFrame {
         handleMouse();
         runtime.setFocusable(true);
         runtime.requestFocusInWindow();
-    }
+    };
     
     private void handleKeyboard() {
         /* 
@@ -207,17 +255,17 @@ public class Context extends javax.swing.JFrame {
             public void keyPressed(java.awt.event.KeyEvent e) {
                 keys.put(e.getKeyCode(), true);
                 events.add(new Event("keydown", new int[]{e.getKeyCode()}));          
-            }
+            };
             
             @Override
             public void keyReleased(java.awt.event.KeyEvent e) {
                 keys.put(e.getKeyCode(), false);
-            }
+            };
             
             @Override
             public void keyTyped(java.awt.event.KeyEvent e) {}
         });
-    }
+    };
     
     private void handleMouse() {
     /*
@@ -227,12 +275,12 @@ public class Context extends javax.swing.JFrame {
             @Override
             public void mouseMoved(java.awt.event.MouseEvent e) {
                 updateMouseCoordinates(e);
-            }
+            };
 
             @Override
             public void mouseDragged(java.awt.event.MouseEvent e) {
                 updateMouseCoordinates(e);
-            }
+            };
         });
 
         runtime.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -248,8 +296,8 @@ public class Context extends javax.swing.JFrame {
                     // Clic droit
                     mouseRightPressed = true;
                     mouseRightClicked = true;
-                }
-            }
+                };
+            };
 
             @Override
             public void mouseReleased(java.awt.event.MouseEvent e) {
@@ -259,10 +307,10 @@ public class Context extends javax.swing.JFrame {
                     mousePressed = false;
                 } else if (e.getButton() == java.awt.event.MouseEvent.BUTTON3) {
                     mouseRightPressed = false;
-                }
-            }
+                };
+            };
         });
-    }
+    };
     
     private void updateMouseCoordinates(java.awt.event.MouseEvent e) {
         /*
@@ -270,9 +318,9 @@ public class Context extends javax.swing.JFrame {
         */
         mouseX = e.getX() / DISPLAY_SCALE;
         mouseY = e.getY() / DISPLAY_SCALE;
-    }
+    };
     
     public void quit() {
         runtime.closeWindow();
-    }
-}
+    };
+};

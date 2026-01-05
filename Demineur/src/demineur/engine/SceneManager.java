@@ -5,9 +5,22 @@ import java.awt.Color;
 
 public class SceneManager extends GameObject {
     
+    /*
+    Le SceneManager permet de gerer les différentes scènes du jeu, il
+    admet aussi un système de transition avec actuellement deux types 
+    possibles.
+    "circle" : transition en cercle.
+    "blur" : transition par pixelisation.
+    */
+    
+    // HashMap des scènes (nomScène : scène) 
     java.util.HashMap<String, Scene> scenes; 
+    
+    // scène courante.
     public String current; 
-    private float transitionTimer;
+    
+    // Timers
+    private float transitionTimer; 
     private float transitionTimerMax;
     private String transitionType;
     private String transitionTarget;
@@ -25,10 +38,20 @@ public class SceneManager extends GameObject {
     };
     
     public void addScene(String name, Scene scene) {
+        /*
+        Ajoute une scène au SceneManager.
+        name (String):
+            nom (label) de la scène à ajouter.
+        scene (Scene):
+            scène à ajouter.
+        */
         scenes.put(name, scene); 
     };
     
     public void handleTransition(float dt) {
+        /*
+        Gère les transitions.
+        */
         if (transitionTimer > 0) {
             transitionTimer -= (dt * 0.001);
             checkSwitch();
@@ -39,9 +62,10 @@ public class SceneManager extends GameObject {
             
         };
     }
-    
-    
     public void checkSwitch() {
+        /*
+        Vérifie si un switch doit être effectué (au milieu d'une transition).
+        */
         if (transitionTimer < transitionTimerMax / 2 && !transitionHappened) {
             transitionHappened = true; 
             switchScene(transitionTarget);
@@ -49,15 +73,29 @@ public class SceneManager extends GameObject {
     }
     
     public void displayTransition() {
+        /*
+        Affiche la transition courante (cercle, pixelisation, ...).
+        */
         if (transitionType.equals("blur")) {
-            context.setPixelated((float)(getCurve("exponential") * 0.15 + 0.05));
+            context.setPixelated((float)(getCurve("exponential", false) * 0.15 + 0.05));
         } else if (transitionType.equals("circle")) {
-            context.drawCircle(context.DISPLAY_WIDTH / 2 - 5, context.DISLAY_HEIGHT / 2, (int)(context.DISPLAY_WIDTH * getCurve("exponential") * 1.5), Color.BLACK);
+            context.drawCircle(context.DISPLAY_WIDTH / 2 - 5, context.DISLAY_HEIGHT / 2, (int)(context.DISPLAY_WIDTH * getCurve("exponential", false) * 1.5), Color.BLACK);
+        } else if (transitionType.equals("slide")) {
+            context.slide((int)(getCurve("exponential", true) * context.DISPLAY_WIDTH));
         }
     }; 
    
     
     public void transition(String scene, long transitionTime, String transitionType_) {
+        /*
+        fonction d'API permettant d'effectuer une transition entre deux scènes.
+        scene (String):
+            la scène vers laquelle transitionner.
+        transitionTime (long):
+            la durée de la transition.
+        transitionType_ (String):   
+            le type de la transition ("blur", "circle", ...).
+        */
         transitionTimer = transitionTime; 
         transitionTimerMax = transitionTime;
         transitionType = transitionType_; 
@@ -66,56 +104,61 @@ public class SceneManager extends GameObject {
     };
     
     public void switchScene(String scene) {
+        /*
+        Change de scène proprement (en appelant les hooks concernés).
+        */
         scenes.get(current).exit();
         current = scene; 
         scenes.get(current).load();  
-    }
+    };
     
-    private float getCurve(String curveType) {
-        // Progression de 0 à 1 sur toute la durée
-        float progress = 1.0f - (transitionTimer / transitionTimerMax);
+    private float getCurve(String curveType, boolean invert) {
+        /*
+        Fonction d'interpolation assez confuse (pas eu le temps 
+        de faire un meilleur système).
+        */
         
+        float progress = 1.0f - (transitionTimer / transitionTimerMax);
         float curve = 0;
         
         switch (curveType) {
+            // courbe linéaire.
             case "linear":
-                // Courbe triangulaire : 0 -> 1 -> 0
                 if (progress < 0.5f) {
-                    curve = progress * 2.0f; // Montée linéaire
+                    curve = progress * 2.0f; 
                 } else {
-                    curve = (1.0f - progress) * 2.0f; // Descente linéaire
-                }
+                    curve = (1.0f - progress) * 2.0f; 
+                };
                 break;
-                
+            // courbe exponentielle.
             case "exponential":
-                // Courbe exponentielle : accélération au milieu
                 if (progress < 0.5f) {
                     float t = progress * 2.0f;
-                    curve = t * t; // x² pour montée rapide
+                    curve = t * t;
                 } else {
                     float t = (1.0f - progress) * 2.0f;
-                    curve = t * t; // x² pour descente rapide
-                }
+                    curve = t * t; 
+                };
                 break;
-             
+            // courbe exponentielle inversée.
             case "exponential-inv":
                 if (progress < 0.5f) {
                        float t = progress * 2.0f;
-                       curve = 1.0f - (1.0f - t) * (1.0f - t); // 1 - (1-x)² pour démarrage rapide
+                       curve = 1.0f - (1.0f - t) * (1.0f - t); 
                    } else {
                        float t = (1.0f - progress) * 2.0f;
-                       curve = 1.0f - (1.0f - t) * (1.0f - t); // 1 - (1-x)² pour fin rapide
-                   }
+                       curve = 1.0f - (1.0f - t) * (1.0f - t); 
+                   };
                    break;
-                
+            // courbe sinusoidale.
             case "sinusoidal":
             default:
-                // Courbe sinusoïdale smooth : 0 -> 1 -> 0
-                // sin(0) = 0, sin(PI/2) = 1, sin(PI) = 0
                 curve = (float)Math.sin(progress * Math.PI);
                 break;
-        }
-        
-        return curve;
-    }
+        };
+        if (invert && transitionTimer > transitionTimerMax / 2) 
+            return - curve;
+        else 
+            return curve;
+    };
 };

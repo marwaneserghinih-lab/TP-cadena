@@ -17,10 +17,11 @@ public class Main extends Scene {
     private static final int ENTER_X_OFFSET = -5; 
     private static final float ANIMATION_DURATION = 2.0f;
 
-    // Timers
+    // Timeurs
     private float titleTime = 0;
     private float animationTime = ANIMATION_DURATION;
     
+    // L'animation est elle active ?
     private boolean isAnimating = true;
     
     public Main(Context context) {
@@ -43,13 +44,12 @@ public class Main extends Scene {
         context.drawImage("marwane_std", 0, titleY + (enterX / 2));
         context.drawImage("enter", enterX, 85);
         
-        transitionCheck();
-        
-    }
+        transitionCheck();  
+    };
     
     private void handleTimers(float dt) {
         /*
-        gère les timers.
+        Gère les timers.
         */
         float dtSeconds = dt * 0.001f;
         
@@ -60,9 +60,10 @@ public class Main extends Scene {
             if (animationTime < 0) {
                 animationTime = 0;
                 isAnimating = false;
-            }
-        }
-    }
+            };
+        };
+    };
+    
     private void transitionCheck() {
         /*
         Vérifie si la transition vers le menu doit s'effectuer.
@@ -71,9 +72,9 @@ public class Main extends Scene {
             if (e.type.equals("keydown")) {
                 if (e.intData[0] == KeyEvent.VK_ENTER) {
                     context.sceneManager.transition("menu", (long)2.0, "blur");
-                }
-            }
-        }
+                };
+            };
+        };
     }; 
     
     /*
@@ -82,14 +83,10 @@ public class Main extends Scene {
     */
     
     @Override
-    public void exit() {
-        
-    }
+    public void exit() {};
     
     @Override 
-    public void load() {
-        
-    }
+    public void load() {};
     
     private int calculateTitleY() {
         /*
@@ -104,10 +101,9 @@ public class Main extends Scene {
             riseOffset = eased * TITLE_RISE_SPEED;
         } else {
             riseOffset = TITLE_RISE_SPEED;
-        }
-        
+        };
         return TITLE_BASE_Y - (int)riseOffset + (int)wave;
-    }
+    };
     
     private int calculateEnterX() {
         /*
@@ -117,13 +113,11 @@ public class Main extends Scene {
         
         if (!isAnimating && animationTime == 0) {
             return finalX;
-        }
+        };
          
         float progress = 1.0f - (animationTime / ANIMATION_DURATION);
         float eased = 1.0f - (float)Math.pow(1.0f - progress, 3);
-       
         int totalDistance = context.DISPLAY_WIDTH + ENTER_X_OFFSET;
-        
         return - context.DISPLAY_WIDTH + (int)(eased * totalDistance);
-    }
-}
+    };
+};
